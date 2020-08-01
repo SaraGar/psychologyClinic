@@ -3,14 +3,13 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity(repositoryClass=UserRepository::class)
  */
-class User
+class User implements UserInterface
 {
     /**
      * @ORM\Id()
@@ -20,100 +19,24 @@ class User
     private $id;
 
     /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $idCardNumber;
-
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $name;
-
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
-    private $lastname;
-
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
-    private $address;
-
-    /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=180, unique=true)
      */
     private $email;
 
     /**
-     * @ORM\Column(type="date", nullable=true)
+     * @ORM\Column(type="json")
      */
-    private $birthDate;
+    private $roles = [];
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @var string The hashed password
+     * @ORM\Column(type="string")
      */
     private $password;
-
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $phone;
-
-    /**
-     * @ORM\OneToMany(targetEntity=Psychologist::class, mappedBy="user")
-     */
-    private $psychologists;
-
-    /**
-     * @ORM\OneToMany(targetEntity=Client::class, mappedBy="user")
-     */
-    private $clients;
-
-    public function __construct()
-    {
-        $this->psychologists = new ArrayCollection();
-        $this->clients = new ArrayCollection();
-    }
 
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getIdCardNumber(): ?string
-    {
-        return $this->idCardNumber;
-    }
-
-    public function setIdCardNumber(string $idCardNumber): self
-    {
-        $this->idCardNumber = $idCardNumber;
-
-        return $this;
-    }
-
-    public function getName(): ?string
-    {
-        return $this->name;
-    }
-
-    public function setName(string $name): self
-    {
-        $this->name = $name;
-
-        return $this;
-    }
-
-    public function getAddress(): ?string
-    {
-        return $this->address;
-    }
-
-    public function setAddress(?string $address): self
-    {
-        $this->address = $address;
-
-        return $this;
     }
 
     public function getEmail(): ?string
@@ -128,33 +51,41 @@ class User
         return $this;
     }
 
-    public function getBirthDate(): ?\DateTimeInterface
+    /**
+     * A visual identifier that represents this user.
+     *
+     * @see UserInterface
+     */
+    public function getUsername(): string
     {
-        return $this->birthDate;
+        return (string) $this->email;
     }
 
-    public function setBirthDate(?\DateTimeInterface $birthDate): self
+    /**
+     * @see UserInterface
+     */
+    public function getRoles(): array
     {
-        $this->birthDate = $birthDate;
+        $roles = $this->roles;
+        // guarantee every user at least has ROLE_USER
+        $roles[] = 'ROLE_USER';
+
+        return array_unique($roles);
+    }
+
+    public function setRoles(array $roles): self
+    {
+        $this->roles = $roles;
 
         return $this;
     }
 
-    public function getLastname(): ?string
+    /**
+     * @see UserInterface
+     */
+    public function getPassword(): string
     {
-        return $this->lastname;
-    }
-
-    public function setLastname(?string $lastname): self
-    {
-        $this->lastname = $lastname;
-
-        return $this;
-    }
-
-    public function getPassword(): ?string
-    {
-        return $this->password;
+        return (string) $this->password;
     }
 
     public function setPassword(string $password): self
@@ -164,77 +95,20 @@ class User
         return $this;
     }
 
-    public function getPhone(): ?string
+    /**
+     * @see UserInterface
+     */
+    public function getSalt()
     {
-        return $this->phone;
-    }
-
-    public function setPhone(string $phone): self
-    {
-        $this->phone = $phone;
-
-        return $this;
+        // not needed when using the "bcrypt" algorithm in security.yaml
     }
 
     /**
-     * @return Collection|Psychologist[]
+     * @see UserInterface
      */
-    public function getPsychologists(): Collection
+    public function eraseCredentials()
     {
-        return $this->psychologists;
-    }
-
-    public function addPsychologist(Psychologist $psychologist): self
-    {
-        if (!$this->psychologists->contains($psychologist)) {
-            $this->psychologists[] = $psychologist;
-            $psychologist->setUser($this);
-        }
-
-        return $this;
-    }
-
-    public function removePsychologist(Psychologist $psychologist): self
-    {
-        if ($this->psychologists->contains($psychologist)) {
-            $this->psychologists->removeElement($psychologist);
-            // set the owning side to null (unless already changed)
-            if ($psychologist->getUser() === $this) {
-                $psychologist->setUser(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|Client[]
-     */
-    public function getClients(): Collection
-    {
-        return $this->clients;
-    }
-
-    public function addClient(Client $client): self
-    {
-        if (!$this->clients->contains($client)) {
-            $this->clients[] = $client;
-            $client->setUser($this);
-        }
-
-        return $this;
-    }
-
-    public function removeClient(Client $client): self
-    {
-        if ($this->clients->contains($client)) {
-            $this->clients->removeElement($client);
-            // set the owning side to null (unless already changed)
-            if ($client->getUser() === $this) {
-                $client->setUser(null);
-            }
-        }
-
-        return $this;
+        // If you store any temporary, sensitive data on the user, clear it here
+        // $this->plainPassword = null;
     }
 }

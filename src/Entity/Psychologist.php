@@ -3,14 +3,15 @@
 namespace App\Entity;
 
 use App\Repository\PsychologistRepository;
+use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity(repositoryClass=PsychologistRepository::class)
  */
-class Psychologist
+class Psychologist implements UserInterface
 {
     /**
      * @ORM\Id()
@@ -20,17 +21,53 @@ class Psychologist
     private $id;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=180, unique=true)
+     */
+    private $email;
+
+    /**
+     * @ORM\Column(type="json")
+     */
+    private $roles = [];
+
+    /**
+     * @var string The hashed password
+     * @ORM\Column(type="string")
+     */
+    private $password;
+
+    /**
+     * @ORM\Column(type="string", length=100)
      */
     private $name;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=150, nullable=true)
+     */
+    private $lastname;
+
+    /**
+     * @ORM\Column(type="string", length=200)
+     */
+    private $idCardNumber;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $professionalRegistrationNumber;
+
+    /**
+     * @ORM\Column(type="string", length=255)
      */
     private $picture;
 
     /**
-     * @ORM\Column(type="text")
+     * @ORM\Column(type="boolean")
+     */
+    private $isAdmin;
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
      */
     private $descriptionBlockSpanish;
 
@@ -45,21 +82,11 @@ class Psychologist
     private $descriptionBlockItalian;
 
     /**
-     * @ORM\Column(type="boolean")
-     */
-    private $isAdmin;
-
-    /**
      * @ORM\ManyToMany(targetEntity=Therapy::class, inversedBy="psychologists")
      */
     private $therapies;
 
-    /**
-     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="psychologists")
-     */
-    private $user;
-
-    /**
+      /**
      * @ORM\OneToMany(targetEntity=Appointment::class, mappedBy="psychologist")
      */
     private $appointments;
@@ -81,16 +108,89 @@ class Psychologist
 
     public function __construct()
     {
-        $this->therapies = new ArrayCollection();
         $this->appointments = new ArrayCollection();
         $this->schedules = new ArrayCollection();
         $this->reports = new ArrayCollection();
         $this->worksheets = new ArrayCollection();
+        $this->therapies = new ArrayCollection();
     }
 
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): self
+    {
+        $this->email = $email;
+
+        return $this;
+    }
+
+    /**
+     * A visual identifier that represents this user.
+     *
+     * @see UserInterface
+     */
+    public function getUsername(): string
+    {
+        return (string) $this->email;
+    }
+
+    /**
+     * @see UserInterface
+     */
+    public function getRoles(): array
+    {
+        $roles = $this->roles;
+        // guarantee every user at least has ROLE_USER
+        $roles[] = 'ROLE_USER';
+
+        return array_unique($roles);
+    }
+
+    public function setRoles(array $roles): self
+    {
+        $this->roles = $roles;
+
+        return $this;
+    }
+
+    /**
+     * @see UserInterface
+     */
+    public function getPassword(): string
+    {
+        return (string) $this->password;
+    }
+
+    public function setPassword(string $password): self
+    {
+        $this->password = $password;
+
+        return $this;
+    }
+
+    /**
+     * @see UserInterface
+     */
+    public function getSalt()
+    {
+        // not needed when using the "bcrypt" algorithm in security.yaml
+    }
+
+    /**
+     * @see UserInterface
+     */
+    public function eraseCredentials()
+    {
+        // If you store any temporary, sensitive data on the user, clear it here
+        // $this->plainPassword = null;
     }
 
     public function getName(): ?string
@@ -105,14 +205,62 @@ class Psychologist
         return $this;
     }
 
+    public function getLastname(): ?string
+    {
+        return $this->lastname;
+    }
+
+    public function setLastname(?string $lastname): self
+    {
+        $this->lastname = $lastname;
+
+        return $this;
+    }
+
+    public function getIdCardNumber(): ?string
+    {
+        return $this->idCardNumber;
+    }
+
+    public function setIdCardNumber(string $idCardNumber): self
+    {
+        $this->idCardNumber = $idCardNumber;
+
+        return $this;
+    }
+
+    public function getProfessionalRegistrationNumber(): ?string
+    {
+        return $this->professionalRegistrationNumber;
+    }
+
+    public function setProfessionalRegistrationNumber(string $professionalRegistrationNumber): self
+    {
+        $this->professionalRegistrationNumber = $professionalRegistrationNumber;
+
+        return $this;
+    }
+
     public function getPicture(): ?string
     {
         return $this->picture;
     }
 
-    public function setPicture(?string $picture): self
+    public function setPicture(string $picture): self
     {
         $this->picture = $picture;
+
+        return $this;
+    }
+
+    public function getIsAdmin(): ?bool
+    {
+        return $this->isAdmin;
+    }
+
+    public function setIsAdmin(bool $isAdmin): self
+    {
+        $this->isAdmin = $isAdmin;
 
         return $this;
     }
@@ -122,7 +270,7 @@ class Psychologist
         return $this->descriptionBlockSpanish;
     }
 
-    public function setDescriptionBlockSpanish(string $descriptionBlockSpanish): self
+    public function setDescriptionBlockSpanish(?string $descriptionBlockSpanish): self
     {
         $this->descriptionBlockSpanish = $descriptionBlockSpanish;
 
@@ -146,59 +294,9 @@ class Psychologist
         return $this->descriptionBlockItalian;
     }
 
-    public function setDescriptionBlockItalian(string $descriptionBlockItalian): self
+    public function setDescriptionBlockItalian(?string $descriptionBlockItalian): self
     {
         $this->descriptionBlockItalian = $descriptionBlockItalian;
-
-        return $this;
-    }
-
-    public function getIsAdmin(): ?bool
-    {
-        return $this->isAdmin;
-    }
-
-    public function setIsAdmin(bool $isAdmin): self
-    {
-        $this->isAdmin = $isAdmin;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|Therapy[]
-     */
-    public function getTherapies(): Collection
-    {
-        return $this->therapies;
-    }
-
-    public function addTherapy(Therapy $therapy): self
-    {
-        if (!$this->therapies->contains($therapy)) {
-            $this->therapies[] = $therapy;
-        }
-
-        return $this;
-    }
-
-    public function removeTherapy(Therapy $therapy): self
-    {
-        if ($this->therapies->contains($therapy)) {
-            $this->therapies->removeElement($therapy);
-        }
-
-        return $this;
-    }
-
-    public function getUser(): ?User
-    {
-        return $this->user;
-    }
-
-    public function setUser(?User $user): self
-    {
-        $this->user = $user;
 
         return $this;
     }
@@ -322,6 +420,32 @@ class Psychologist
             if ($worksheet->getPsychologist() === $this) {
                 $worksheet->setPsychologist(null);
             }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Therapy[]
+     */
+    public function getTherapies(): Collection
+    {
+        return $this->therapies;
+    }
+
+    public function addTherapy(Therapy $therapy): self
+    {
+        if (!$this->therapies->contains($therapy)) {
+            $this->therapies[] = $therapy;
+        }
+
+        return $this;
+    }
+
+    public function removeTherapy(Therapy $therapy): self
+    {
+        if ($this->therapies->contains($therapy)) {
+            $this->therapies->removeElement($therapy);
         }
 
         return $this;
