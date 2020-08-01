@@ -1,14 +1,64 @@
 security:
+    encoders:
+        App\Entity\User:
+            algorithm: auto
+        App\Entity\Psychologist:
+            algorithm: auto
+        App\Entity\Client:
+            algorithm: auto
+
+
+
     # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
     providers:
-        users_in_memory: { memory: null }
+        # used to reload user from session & other features (e.g. switch_user)
+        user_provider:
+            entity:
+                class: App\Entity\Client
+                property: email
+        professional_provider:
+            entity:
+                class: App\Entity\Psychologist
+                property: email
+        backend_provider:
+            entity:
+                class: App\Entity\User
+                property: email
+        # used to reload user from session & other features (e.g. switch_user)
+        # used to reload user from session & other features (e.g. switch_user)
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         main:
             anonymous: lazy
-            provider: users_in_memory
+            provider: user_provider
+            guard:
+                authenticators:
+                    - App\Security\AppAuthenticator
+                entry_point: App\Security\AppAuthenticator
+            logout:
+                path: app_logout
+        professional:
+            anonymous: lazy
+            provider: professional_provider
+            guard:
+                authenticators:
+                    - App\Security\ProfessionalAuthenticator
+                entry_point: App\Security\ProfessionalAuthenticator
+            logout:
+                path: professional_logout
+        backend:
+            anonymous: lazy
+            provider: backend_provider
+            guard:
+                authenticators:
+                    - App\Security\BackendAuthenticator
+                entry_point: App\Security\BackendAuthenticator
+            logout:
+                path: backend_logout
+                # where to redirect after logout
+                # target: app_any_route
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#firewalls-authentication
@@ -19,5 +69,7 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
+        - { path: ^/backend/, roles: ROLE_BACKEND }
         # - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/(es|en|ru|it|pt|fr)/user/, roles: [ROLE_CLIENT]}
+        - { path: ^/(es|en|ru|it|pt|fr)/professional/, roles: [ROLE_PROFESSIONAL]}
