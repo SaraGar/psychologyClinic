@@ -6,10 +6,12 @@ use App\Repository\PsychologistRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity(repositoryClass=PsychologistRepository::class)
+ * @UniqueEntity(fields={"email"}, message="There is already an account with this email")
  */
 class Psychologist implements UserInterface
 {
@@ -37,7 +39,7 @@ class Psychologist implements UserInterface
     private $password;
 
     /**
-     * @ORM\Column(type="string", length=100)
+     * @ORM\Column(type="string", length=100, nullable=true)
      */
     private $name;
 
@@ -47,24 +49,29 @@ class Psychologist implements UserInterface
     private $lastname;
 
     /**
-     * @ORM\Column(type="string", length=200)
+     * @ORM\Column(type="string", length=200, nullable=true)
      */
     private $idCardNumber;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $professionalRegistrationNumber;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $picture;
 
     /**
      * @ORM\Column(type="boolean")
      */
-    private $isAdmin;
+    private $isActive = 0;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $isAdmin = 0;
 
     /**
      * @ORM\Column(type="text", nullable=true)
@@ -149,7 +156,7 @@ class Psychologist implements UserInterface
     {
         $roles = $this->roles;
         // guarantee every user at least has ROLE_USER
-        $roles[] = 'ROLE_USER';
+        $roles[] = 'ROLE_PROFESSIONAL';
 
         return array_unique($roles);
     }
@@ -447,6 +454,18 @@ class Psychologist implements UserInterface
         if ($this->therapies->contains($therapy)) {
             $this->therapies->removeElement($therapy);
         }
+
+        return $this;
+    }
+
+    public function getIsActive(): ?bool
+    {
+        return $this->isActive;
+    }
+
+    public function setIsActive(bool $isActive): self
+    {
+        $this->isActive = $isActive;
 
         return $this;
     }

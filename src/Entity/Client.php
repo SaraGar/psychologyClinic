@@ -6,10 +6,12 @@ use App\Repository\ClientRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity(repositoryClass=ClientRepository::class)
+ * @UniqueEntity(fields={"email"}, message="There is already an account with this email")
  */
 class Client implements UserInterface
 {
@@ -52,7 +54,7 @@ class Client implements UserInterface
     private $birthDate;
 
     /**
-     * @ORM\Column(type="string", length=100)
+     * @ORM\Column(type="string", length=100, nullable=true)
      */
     private $name;
 
@@ -69,7 +71,7 @@ class Client implements UserInterface
     /**
      * @ORM\Column(type="boolean")
      */
-    private $isActive;
+    private $isActive = 1;
 
     /**
      * @ORM\Column(type="string", length=200, nullable=true)
@@ -132,7 +134,7 @@ class Client implements UserInterface
     {
         $roles = $this->roles;
         // guarantee every user at least has ROLE_USER
-        $roles[] = 'ROLE_USER';
+        $roles[] = 'ROLE_CLIENT';
 
         return array_unique($roles);
     }
